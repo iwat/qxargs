@@ -19,7 +19,7 @@ func newFinder(debug bool) *_Finder {
 func (f *_Finder) Find(names ...string) ([]string, error) {
 	args := []string{".", "-type", "f", "-not", "-name", ".*"}
 	for _, name := range names {
-		args = append(args, "-and", "-name", "*"+name+"*")
+		args = append(args, "-and", "-iwholename", "*"+name+"*")
 	}
 
 	if f.debug {
