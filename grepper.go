@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"os"
 )
 
@@ -18,7 +19,8 @@ func (g *_Grepper) Grep(files []string, keywords ...string) ([]string, error) {
 	for _, file := range files {
 		matched, err := g.grepSingleFile(file, keywords...)
 		if err != nil {
-			return nil, err
+			fmt.Fprintln(os.Stderr, "skipping file", file, err)
+			continue
 		}
 		if matched == true {
 			matches = append(matches, file)
