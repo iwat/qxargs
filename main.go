@@ -106,6 +106,9 @@ func main() {
 		fmt.Fprintln(os.Stderr, "  ", result)
 	}
 
+	fmt.Fprintln(os.Stderr, "Press any key to continue.")
+	os.Stdin.Read(make([]byte, 1))
+
 	commandArgs = append(commandArgs, results...)
 
 	err = syscall.Exec(commandPath, commandArgs, os.Environ())
