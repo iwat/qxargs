@@ -96,6 +96,11 @@ func main() {
 		panic(err)
 	}
 
+	if len(results) == 0 {
+		fmt.Fprintln(os.Stderr, "no files matched")
+		os.Exit(2)
+	}
+
 	commandPath, err := exec.LookPath(commandArgs[0])
 	if err != nil {
 		panic(err)
