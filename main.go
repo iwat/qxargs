@@ -44,6 +44,10 @@ func init() {
 
 func parseArgs() ([]string, []string, []string) {
 	args := flag.Args()
+	if len(args) < 2 {
+		flag.Usage()
+		os.Exit(1)
+	}
 
 	dashNdx := -1
 	for i, arg := range args {
