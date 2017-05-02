@@ -101,6 +101,11 @@ func main() {
 		panic(err)
 	}
 
+	fmt.Fprintf(os.Stderr, "executing %v\n", commandArgs)
+	for _, result := range results {
+		fmt.Fprintln(os.Stderr, "  ", result)
+	}
+
 	commandArgs = append(commandArgs, results...)
 
 	err = syscall.Exec(commandPath, commandArgs, os.Environ())
