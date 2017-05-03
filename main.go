@@ -85,7 +85,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	results, err := console.loop()
+	results, err := console.loop(commandArgs)
 	if err != nil {
 		panic(err)
 	}

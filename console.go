@@ -43,11 +43,12 @@ func (c *_Console) update(queryArgs []string) []string {
 		panic(err)
 	}
 
+	c.args = queryArgs
 	c.results = results
 	return c.results
 }
 
-func (c *_Console) loop() ([]string, error) {
+func (c *_Console) loop(commandArgs []string) ([]string, error) {
 	if err := termbox.Init(); err != nil {
 		return nil, err
 	}
@@ -56,23 +57,51 @@ func (c *_Console) loop() ([]string, error) {
 	if len(c.results) > 10 {
 		c.results = c.results[:10]
 	}
+
 	current := 0
+	command := "qxargs " + strings.Join(commandArgs, " ") + " --"
+	args := strings.Join(c.args, " ")
 
 	for {
+		y := 0
 		termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
-		setCells(0, 0, "Select one or all files to be executed:", termbox.ColorWhite, termbox.ColorBlack)
+		setCells(0, y, "Select one or all files to be executed:", termbox.ColorWhite, termbox.ColorBlack)
+		y += 2
+
 		for i, result := range c.results {
 			color := termbox.ColorWhite
 			if i == current {
 				color |= termbox.AttrBold
 			}
-			termbox.SetCell(1, i+2, '-', color, termbox.ColorDefault)
-			setCells(3, i+2, result, color, termbox.ColorDefault)
+			termbox.SetCell(1, y, '-', color, termbox.ColorDefault)
+			setCells(3, y, result, color, termbox.ColorDefault)
+			y++
 		}
-		setCells(0, len(c.results)+3, "[TAB] to select", termbox.ColorDefault, termbox.ColorDefault)
-		setCells(0, len(c.results)+4, "[Enter] to execute", termbox.ColorDefault, termbox.ColorDefault)
-		setCells(0, len(c.results)+5, "[Ctrl-A] to execute all, [Ctrl-C] to stop", termbox.ColorDefault, termbox.ColorDefault)
+		y += 2
+
+		menus := []struct {
+			key  string
+			desc string
+		}{
+			{"[TAB]", "select"},
+			{"[Enter]", "execute"},
+			{"[Ctrl-A]", "execute all"},
+			{"[Ctrl-C]", "stop"},
+		}
+
+		x := 0
+		for _, menu := range menus {
+			setCells(x, y, menu.key, termbox.ColorYellow, termbox.ColorDefault)
+			x += len(menu.key) + 1
+			setCells(x, y, menu.desc, termbox.ColorWhite, termbox.ColorDefault)
+			x += len(menu.desc) + 1
+		}
+		y++
+
+		setCells(0, y, command, termbox.ColorWhite|termbox.AttrBold, termbox.ColorDefault)
+		setCells(len(command)+1, y, args, termbox.ColorWhite, termbox.ColorDefault)
+		termbox.SetCursor(len(command)+1+len(args), y)
 
 		termbox.Flush()
 
