@@ -17,9 +17,9 @@ func newFinder(debug bool) *_Finder {
 }
 
 func (f *_Finder) Find(names ...string) ([]string, error) {
-	args := []string{".", "-type", "f", "-not", "-name", ".*"}
+	args := []string{".", "-type", "f", "-not", "-path", "*/\\.*"}
 	for _, name := range names {
-		args = append(args, "-and", "-iwholename", "*"+name+"*")
+		args = append(args, "-ipath", "*"+name+"*")
 	}
 
 	if f.debug {
