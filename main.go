@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 	"syscall"
 )
 
@@ -42,7 +41,7 @@ func init() {
 	}
 }
 
-func parseArgs() ([]string, []string, []string) {
+func parseArgs() ([]string, []string) {
 	args := flag.Args()
 	if len(args) < 2 {
 		flag.Usage()
@@ -57,62 +56,48 @@ func parseArgs() ([]string, []string, []string) {
 		}
 	}
 
-	commandArgs := []string{}
-	findArgs := []string{}
-	grepArgs := []string{}
+	commandArgs := []string(nil)
+	queryArgs := []string(nil)
 
 	if dashNdx == -1 {
 		commandArgs = []string{args[0]}
-		args = args[1:]
+		queryArgs = args[1:]
 	} else {
 		commandArgs = args[0:dashNdx]
-		args = args[dashNdx+1:]
+		queryArgs = args[dashNdx+1:]
 	}
 
-	for _, arg := range args {
-		if strings.HasPrefix(arg, "?") {
-			grepArgs = append(grepArgs, arg[1:])
-		} else {
-			findArgs = append(findArgs, arg)
-		}
-	}
-
-	return commandArgs, findArgs, grepArgs
+	return commandArgs, queryArgs
 }
 
 func main() {
 	flag.Parse()
-	commandArgs, findArgs, grepArgs := parseArgs()
+	commandArgs, queryArgs := parseArgs()
 
 	finder := newFinder(false)
-	results, err := finder.Find(findArgs...)
-	if err != nil {
-		panic(err)
-	}
-
 	grepper := newGrepper()
-	results, err = grepper.Grep(results, grepArgs...)
-	if err != nil {
-		panic(err)
-	}
+
+	console := newConsole(finder, grepper)
+	results := console.update(queryArgs)
 
 	if len(results) == 0 {
 		fmt.Fprintln(os.Stderr, "no files matched")
 		os.Exit(2)
 	}
 
-	commandPath, err := exec.LookPath(commandArgs[0])
+	results, err := console.loop()
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Fprintf(os.Stderr, "executing %v\n", commandArgs)
-	for _, result := range results {
-		fmt.Fprintln(os.Stderr, "  ", result)
+	if len(results) == 0 {
+		return
 	}
 
-	fmt.Fprintln(os.Stderr, "Press any key to continue.")
-	os.Stdin.Read(make([]byte, 1))
+	commandPath, err := exec.LookPath(commandArgs[0])
+	if err != nil {
+		panic(err)
+	}
 
 	commandArgs = append(commandArgs, results...)
 
