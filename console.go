@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/nsf/termbox-go"
 )
@@ -84,7 +85,7 @@ func (c *_Console) loop(commandArgs []string) ([]string, error) {
 			key  string
 			desc string
 		}{
-			{"[TAB]", "select"},
+			{"[TAB/↑/↓]", "select"},
 			{"[Enter]", "execute"},
 			{"[Ctrl-A]", "execute all"},
 			{"[Ctrl-C]", "stop"},
@@ -93,7 +94,7 @@ func (c *_Console) loop(commandArgs []string) ([]string, error) {
 		x := 0
 		for _, menu := range menus {
 			setCells(x, y, menu.key, termbox.ColorYellow, termbox.ColorDefault)
-			x += len(menu.key) + 1
+			x += utf8.RuneCountInString(menu.key) + 1
 			setCells(x, y, menu.desc, termbox.ColorWhite, termbox.ColorDefault)
 			x += len(menu.desc) + 1
 		}
@@ -117,8 +118,17 @@ func (c *_Console) loop(commandArgs []string) ([]string, error) {
 				return nil, nil
 			case termbox.KeyCtrlA:
 				return c.results, nil
-			case termbox.KeyTab:
-				current = (current + 1) % len(c.results)
+			case termbox.KeyTab, termbox.KeyArrowDown:
+				if len(c.results) > 0 {
+					current = (current + 1) % len(c.results)
+				}
+			case termbox.KeyArrowUp:
+				if len(c.results) > 0 {
+					current = (current - 1) % len(c.results)
+					if current < 0 {
+						current = len(c.results) - 1
+					}
+				}
 			case termbox.KeyEnter:
 				return []string{c.results[current]}, nil
 			}
