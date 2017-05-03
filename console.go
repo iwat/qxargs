@@ -11,7 +11,7 @@ import (
 type _Console struct {
 	finder  *_Finder
 	grepper *_Grepper
-	args    []string
+	query   string
 	results []string
 }
 
@@ -22,7 +22,8 @@ func newConsole(finder *_Finder, grepper *_Grepper) *_Console {
 	}
 }
 
-func (c *_Console) update(queryArgs []string) []string {
+func (c *_Console) update(query string) []string {
+	queryArgs := strings.Split(query, " ")
 	findArgs := []string(nil)
 	grepArgs := []string(nil)
 
@@ -44,7 +45,7 @@ func (c *_Console) update(queryArgs []string) []string {
 		panic(err)
 	}
 
-	c.args = queryArgs
+	c.query = query
 	c.results = results
 	return c.results
 }
@@ -55,15 +56,14 @@ func (c *_Console) loop(commandArgs []string) ([]string, error) {
 	}
 	defer termbox.Close()
 
-	if len(c.results) > 10 {
-		c.results = c.results[:10]
-	}
-
 	current := 0
 	command := "qxargs " + strings.Join(commandArgs, " ") + " --"
-	args := strings.Join(c.args, " ")
 
 	for {
+		if len(c.results) > 10 {
+			c.results = c.results[:10]
+		}
+
 		y := 0
 		termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
@@ -101,8 +101,8 @@ func (c *_Console) loop(commandArgs []string) ([]string, error) {
 		y++
 
 		setCells(0, y, command, termbox.ColorWhite|termbox.AttrBold, termbox.ColorDefault)
-		setCells(len(command)+1, y, args, termbox.ColorWhite, termbox.ColorDefault)
-		termbox.SetCursor(len(command)+1+len(args), y)
+		setCells(len(command)+1, y, c.query, termbox.ColorWhite, termbox.ColorDefault)
+		termbox.SetCursor(len(command)+1+len(c.query), y)
 
 		termbox.Flush()
 
@@ -131,6 +131,21 @@ func (c *_Console) loop(commandArgs []string) ([]string, error) {
 				}
 			case termbox.KeyEnter:
 				return []string{c.results[current]}, nil
+			case termbox.KeyBackspace, termbox.KeyBackspace2:
+				if len(c.query) > 0 {
+					c.update(c.query[:len(c.query)-1])
+					current = 0
+				}
+			case termbox.KeySpace:
+				c.update(c.query + " ")
+				current = 0
+			default:
+				if event.Ch != 0 {
+					buf := make([]byte, utf8.UTFMax)
+					n := utf8.EncodeRune(buf[:], event.Ch)
+					c.update(c.query + string(buf[:n]))
+					current = 0
+				}
 			}
 			break
 		}

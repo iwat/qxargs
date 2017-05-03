@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 )
 
@@ -78,7 +79,7 @@ func main() {
 	grepper := newGrepper()
 
 	console := newConsole(finder, grepper)
-	results := console.update(queryArgs)
+	results := console.update(strings.Join(queryArgs, " "))
 
 	if len(results) == 0 {
 		fmt.Fprintln(os.Stderr, "no files matched")
