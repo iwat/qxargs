@@ -36,7 +36,7 @@ func (c *_Console) update(query string) []string {
 	results := []string(nil)
 	finder := NewFinder(findArgs...)
 	for result := range finder.Channel() {
-		matched, _ := c.grepper.grepSingleFile(result, grepArgs...)
+		matched, _ := c.grepper.Grep(result, grepArgs...)
 		if matched {
 			results = append(results, result)
 		}

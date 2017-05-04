@@ -3,33 +3,17 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"os"
 )
 
 type _Grepper struct {
 }
 
-func newGrepper() *_Grepper {
+func NewGrepper() *_Grepper {
 	return &_Grepper{}
 }
 
-func (g *_Grepper) Grep(files []string, keywords ...string) ([]string, error) {
-	matches := make([]string, 0)
-	for _, file := range files {
-		matched, err := g.grepSingleFile(file, keywords...)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "skipping file", file, err)
-			continue
-		}
-		if matched == true {
-			matches = append(matches, file)
-		}
-	}
-	return matches, nil
-}
-
-func (g *_Grepper) grepSingleFile(file string, keywords ...string) (bool, error) {
+func (g *_Grepper) Grep(file string, keywords ...string) (bool, error) {
 	keywordMap := mapKeywords(keywords)
 
 	f, err := os.Open(file)
