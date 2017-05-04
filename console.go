@@ -67,11 +67,11 @@ func (c *_Console) loop(commandArgs []string) ([]string, error) {
 		y := 0
 		termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 
-		setCells(0, y, "Select one or all files to be executed:", termbox.ColorWhite, termbox.ColorBlack)
+		setCells(0, y, "Select one or all files to be executed:", termbox.ColorDefault, termbox.ColorDefault)
 		y += 2
 
 		for i, result := range c.results {
-			color := termbox.ColorWhite
+			color := termbox.ColorDefault
 			if i == current {
 				color |= termbox.AttrBold
 			}
@@ -95,13 +95,13 @@ func (c *_Console) loop(commandArgs []string) ([]string, error) {
 		for _, menu := range menus {
 			setCells(x, y, menu.key, termbox.ColorYellow, termbox.ColorDefault)
 			x += utf8.RuneCountInString(menu.key) + 1
-			setCells(x, y, menu.desc, termbox.ColorWhite, termbox.ColorDefault)
+			setCells(x, y, menu.desc, termbox.ColorDefault, termbox.ColorDefault)
 			x += len(menu.desc) + 1
 		}
 		y++
 
-		setCells(0, y, command, termbox.ColorWhite|termbox.AttrBold, termbox.ColorDefault)
-		setCells(len(command)+1, y, c.query, termbox.ColorWhite, termbox.ColorDefault)
+		setCells(0, y, command, termbox.ColorDefault|termbox.AttrBold, termbox.ColorDefault)
+		setCells(len(command)+1, y, c.query, termbox.ColorDefault, termbox.ColorDefault)
 		termbox.SetCursor(len(command)+1+len(c.query), y)
 
 		termbox.Flush()
