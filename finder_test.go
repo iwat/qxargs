@@ -6,15 +6,17 @@ import (
 )
 
 func TestFind(t *testing.T) {
-	finder := newFinder(true)
-	matches, err := finder.Find("main", "go")
-	if err != nil {
-		t.Fatal(err)
+	finder := NewFinder("main", "go")
+
+	match := <-finder.Channel()
+	if !strings.HasSuffix(match, "main.go") {
+		t.Fatal("expected main.go, got", match)
 	}
-	if len(matches) != 1 {
-		t.Fatal("expected 1 match, got", len(matches))
-	}
-	if !strings.HasSuffix(matches[0], "main.go") {
-		t.Fatal("expected main.go, got", matches[0])
-	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Log("recovered", r)
+		}
+	}()
+	finder.Reset()
 }

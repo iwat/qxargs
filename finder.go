@@ -1,59 +1,95 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
-	"io"
-	"os/exec"
+	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
 type _Finder struct {
-	debug bool
+	names   []string
+	channel chan string
+	reset   chan bool
 }
 
-func newFinder(debug bool) *_Finder {
-	return &_Finder{debug: debug}
-}
-
-func (f *_Finder) Find(names ...string) ([]string, error) {
-	args := []string{".", "-type", "f", "-not", "-path", "*/\\.*"}
+func NewFinder(names ...string) *_Finder {
+	lower_names := make([]string, 0, len(names))
 	for _, name := range names {
-		args = append(args, "-ipath", "*"+name+"*")
+		lower_names = append(lower_names, strings.ToLower(name))
 	}
 
-	if f.debug {
-		fmt.Println(append(append([]string{}, "find"), args...))
-	}
-	cmd := exec.Command("find", args...)
-
-	readCloser, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, err
+	finder := &_Finder{
+		names:   lower_names,
+		channel: make(chan string),
+		reset:   make(chan bool),
 	}
 
-	defer func() { readCloser.Close() }()
-
-	if err := cmd.Start(); err != nil {
-		return nil, err
-	}
-
-	matches := make([]string, 0)
-	reader := bufio.NewReader(readCloser)
-	for {
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			if err == io.EOF {
-				break
+	go func() {
+		filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+			if finder.shouldSkip(info.Name()) {
+				if info.IsDir() {
+					return filepath.SkipDir
+				} else {
+					return nil
+				}
 			}
-			return nil, err
+
+			if info.IsDir() {
+				return nil
+			}
+
+			rel, err := filepath.Rel(".", path)
+			if err != nil {
+				panic(err)
+			}
+
+			if !finder.matches(rel) {
+				return nil
+			}
+
+			select {
+			case <-finder.reset:
+				return errors.New("reset")
+			case finder.channel <- rel:
+			}
+
+			return nil
+		})
+		close(finder.channel)
+		close(finder.reset)
+	}()
+
+	return finder
+}
+
+func (f *_Finder) Channel() <-chan string {
+	return f.channel
+}
+
+func (f *_Finder) Reset() {
+	f.reset <- true
+}
+
+func (f *_Finder) shouldSkip(basename string) bool {
+	if basename == "." || basename == ".." {
+		return false
+	}
+
+	if strings.HasPrefix(basename, ".") {
+		return true
+	}
+
+	return false
+}
+
+func (f *_Finder) matches(rel string) bool {
+	lower_rel := strings.ToLower(rel)
+	for _, name := range f.names {
+		if !strings.Contains(lower_rel, name) {
+			return false
 		}
-		matches = append(matches, strings.TrimSpace(line))
 	}
 
-	if err := cmd.Wait(); err != nil {
-		return matches, err
-	}
-
-	return matches, nil
+	return true
 }

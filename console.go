@@ -9,15 +9,13 @@ import (
 )
 
 type _Console struct {
-	finder  *_Finder
 	grepper *_Grepper
 	query   string
 	results []string
 }
 
-func newConsole(finder *_Finder, grepper *_Grepper) *_Console {
+func newConsole(grepper *_Grepper) *_Console {
 	return &_Console{
-		finder:  finder,
 		grepper: grepper,
 	}
 }
@@ -35,14 +33,17 @@ func (c *_Console) update(query string) []string {
 		}
 	}
 
-	results, err := c.finder.Find(findArgs...)
-	if err != nil {
-		panic(err)
-	}
-
-	results, err = c.grepper.Grep(results, grepArgs...)
-	if err != nil {
-		panic(err)
+	results := []string(nil)
+	finder := NewFinder(findArgs...)
+	for result := range finder.Channel() {
+		matched, _ := c.grepper.grepSingleFile(result, grepArgs...)
+		if matched {
+			results = append(results, result)
+		}
+		if len(results) >= 10 {
+			finder.Reset()
+			break
+		}
 	}
 
 	c.query = query
