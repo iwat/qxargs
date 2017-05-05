@@ -6,14 +6,14 @@ import (
 	"os"
 )
 
-type Grepper struct {
+type _Grepper struct {
 }
 
-func NewGrepper() *Grepper {
-	return &Grepper{}
+func newGrepper() *_Grepper {
+	return &_Grepper{}
 }
 
-func (g *Grepper) Grep(file string, keywords ...string) (bool, error) {
+func (g *_Grepper) grep(file string, keywords ...string) (bool, error) {
 	keywordMap := mapKeywords(keywords)
 
 	f, err := os.Open(file)

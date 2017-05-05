@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+
+	"github.com/iwat/qxargs/internal"
 )
 
 func checkedPrintln(a ...interface{}) {
@@ -80,15 +82,18 @@ func main() {
 	flag.Parse()
 	commandArgs, queryArgs := parseArgs()
 
-	console := newConsole()
-	results := console.update(strings.Join(queryArgs, " "))
+	engine := internal.NewEngine()
+	results := engine.Query(queryArgs...)
 
 	if len(results) == 0 {
 		checkedPrintln("no files matched")
 		os.Exit(2)
 	}
 
-	results, err := console.loop(commandArgs)
+	console := newConsole(commandArgs, engine)
+	console.update(strings.Join(queryArgs, " "))
+
+	results, err := console.loop()
 	if err != nil {
 		panic(err)
 	}

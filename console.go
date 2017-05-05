@@ -11,110 +11,105 @@ import (
 )
 
 type _Console struct {
-	grepper *internal.Grepper
+	command string
+	engine  *internal.Engine
 	query   string
+
+	current int
 	results []string
 }
 
-func newConsole() *_Console {
+func newConsole(commandArgs []string, engine *internal.Engine) *_Console {
 	return &_Console{
-		grepper: internal.NewGrepper(),
+		command: "qxargs " + strings.Join(commandArgs, " ") + " --",
+		engine:  engine,
 	}
 }
 
-func (c *_Console) update(query string) []string {
+func (c *_Console) update(query string) {
 	queryArgs := strings.Split(query, " ")
-	findArgs := []string(nil)
-	grepArgs := []string(nil)
-
-	for _, arg := range queryArgs {
-		if strings.HasPrefix(arg, "?") {
-			grepArgs = append(grepArgs, arg[1:])
-		} else {
-			findArgs = append(findArgs, arg)
-		}
-	}
-
-	results := []string(nil)
-	finder := internal.NewFinder(findArgs...)
-	for result := range finder.Channel() {
-		matched, err := c.grepper.Grep(result, grepArgs...)
-		if err != nil {
-			continue
-		}
-		if matched {
-			results = append(results, result)
-		}
-		if len(results) >= 10 {
-			finder.Reset()
-			break
-		}
-	}
-
+	c.results = c.engine.Query(queryArgs...)
 	c.query = query
-	c.results = results
-	return c.results
+
+	if len(c.results) == 0 {
+		c.current = -1
+	} else {
+		c.current = 0
+	}
 }
 
-func (c *_Console) loop(commandArgs []string) ([]string, error) {
+func (c *_Console) moveDown() {
+	if len(c.results) > 0 {
+		c.current = (c.current + 1) % len(c.results)
+	}
+}
+
+func (c *_Console) moveUp() {
+	if len(c.results) == 0 {
+		return
+	}
+	c.current = (c.current - 1) % len(c.results)
+	if c.current < 0 {
+		c.current = len(c.results) - 1
+	}
+}
+
+func (c *_Console) draw() {
+	y := 0
+	if err := termbox.Clear(termbox.ColorDefault, termbox.ColorDefault); err != nil {
+		panic(err)
+	}
+
+	setCells(0, y, "Select one or all files to be executed:", termbox.ColorDefault, termbox.ColorDefault)
+	y += 2
+
+	for i, result := range c.results {
+		color := termbox.ColorDefault
+		if i == c.current {
+			color |= termbox.AttrBold
+		}
+		termbox.SetCell(1, y, '-', color, termbox.ColorDefault)
+		setCells(3, y, result, color, termbox.ColorDefault)
+		y++
+	}
+	y += 2
+
+	menus := []struct {
+		key  string
+		desc string
+	}{
+		{"[TAB/↑/↓]", "select"},
+		{"[Enter]", "execute"},
+		{"[Ctrl-A]", "execute all"},
+		{"[Ctrl-C]", "stop"},
+	}
+
+	x := 0
+	for _, menu := range menus {
+		setCells(x, y, menu.key, termbox.ColorYellow, termbox.ColorDefault)
+		x += utf8.RuneCountInString(menu.key) + 1
+		setCells(x, y, menu.desc, termbox.ColorDefault, termbox.ColorDefault)
+		x += len(menu.desc) + 1
+	}
+	y++
+
+	setCells(0, y, c.command, termbox.ColorDefault|termbox.AttrBold, termbox.ColorDefault)
+	setCells(len(c.command)+1, y, c.query, termbox.ColorDefault, termbox.ColorDefault)
+	termbox.SetCursor(len(c.command)+1+len(c.query), y)
+
+	if err := termbox.Flush(); err != nil {
+		panic(err)
+	}
+}
+
+func (c *_Console) loop() ([]string, error) {
 	if err := termbox.Init(); err != nil {
 		return nil, err
 	}
 	defer termbox.Close()
 
-	current := 0
-	command := "qxargs " + strings.Join(commandArgs, " ") + " --"
-
 	for {
-		if len(c.results) > 10 {
-			c.results = c.results[:10]
-		}
-
-		y := 0
-		if err := termbox.Clear(termbox.ColorDefault, termbox.ColorDefault); err != nil {
-			panic(err)
-		}
-
-		setCells(0, y, "Select one or all files to be executed:", termbox.ColorDefault, termbox.ColorDefault)
-		y += 2
-
-		for i, result := range c.results {
-			color := termbox.ColorDefault
-			if i == current {
-				color |= termbox.AttrBold
-			}
-			termbox.SetCell(1, y, '-', color, termbox.ColorDefault)
-			setCells(3, y, result, color, termbox.ColorDefault)
-			y++
-		}
-		y += 2
-
-		menus := []struct {
-			key  string
-			desc string
-		}{
-			{"[TAB/↑/↓]", "select"},
-			{"[Enter]", "execute"},
-			{"[Ctrl-A]", "execute all"},
-			{"[Ctrl-C]", "stop"},
-		}
-
-		x := 0
-		for _, menu := range menus {
-			setCells(x, y, menu.key, termbox.ColorYellow, termbox.ColorDefault)
-			x += utf8.RuneCountInString(menu.key) + 1
-			setCells(x, y, menu.desc, termbox.ColorDefault, termbox.ColorDefault)
-			x += len(menu.desc) + 1
-		}
-		y++
-
-		setCells(0, y, command, termbox.ColorDefault|termbox.AttrBold, termbox.ColorDefault)
-		setCells(len(command)+1, y, c.query, termbox.ColorDefault, termbox.ColorDefault)
-		termbox.SetCursor(len(command)+1+len(c.query), y)
-
-		if err := termbox.Flush(); err != nil {
-			panic(err)
-		}
+		c.draw()
 
 		for {
 			event := termbox.PollEvent()
@@ -129,38 +124,32 @@ func (c *_Console) loop(commandArgs []string) ([]string, error) {
 			case termbox.KeyCtrlA:
 				return c.results, nil
 			case termbox.KeyTab, termbox.KeyArrowDown:
-				if len(c.results) > 0 {
-					current = (current + 1) % len(c.results)
-				}
+				c.moveDown()
 			case termbox.KeyArrowUp:
-				if len(c.results) > 0 {
-					current = (current - 1) % len(c.results)
-					if current < 0 {
-						current = len(c.results) - 1
-					}
-				}
+				c.moveUp()
 			case termbox.KeyEnter:
 				if len(c.results) > 0 {
-					return []string{c.results[current]}, nil
+					return []string{c.results[c.current]}, nil
 				}
 			case termbox.KeyBackspace, termbox.KeyBackspace2:
-				if len(c.query) > 0 {
-					c.update(c.query[:len(c.query)-1])
-					current = 0
-				}
+				c.updateBackspace()
 			case termbox.KeySpace:
 				c.update(c.query + " ")
-				current = 0
 			default:
 				if event.Ch != 0 {
 					buf := make([]byte, utf8.UTFMax)
 					n := utf8.EncodeRune(buf[:], event.Ch)
 					c.update(c.query + string(buf[:n]))
-					current = 0
 				}
 			}
 			break
 		}
+	}
+}
+
+func (c *_Console) updateBackspace() {
+	if len(c.query) > 0 {
+		c.update(c.query[:len(c.query)-1])
 	}
 }
 

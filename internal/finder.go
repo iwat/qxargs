@@ -7,13 +7,13 @@ import (
 	"strings"
 )
 
-type Finder struct {
+type _Finder struct {
 	matchers []_Matcher
-	channel  chan string
-	reset    chan bool
+	walker   chan string
+	done     chan bool
 }
 
-func NewFinder(queries ...string) *Finder {
+func newFinder(queries ...string) *_Finder {
 	matchers := make([]_Matcher, 0, len(queries))
 	for _, query := range queries {
 		matcher, err := newMatcher(query)
@@ -24,10 +24,10 @@ func NewFinder(queries ...string) *Finder {
 		matchers = append(matchers, matcher)
 	}
 
-	finder := &Finder{
+	finder := &_Finder{
 		matchers: matchers,
-		channel:  make(chan string),
-		reset:    make(chan bool),
+		walker:   make(chan string),
+		done:     make(chan bool),
 	}
 
 	go func() {
@@ -54,29 +54,29 @@ func NewFinder(queries ...string) *Finder {
 			}
 
 			select {
-			case <-finder.reset:
-				return errors.New("reset")
-			case finder.channel <- rel:
+			case <-finder.done:
+				return errors.New("done")
+			case finder.walker <- rel:
 			}
 
 			return nil
 		})
-		close(finder.channel)
-		close(finder.reset)
+		close(finder.walker)
+		close(finder.done)
 	}()
 
 	return finder
 }
 
-func (f *Finder) Channel() <-chan string {
-	return f.channel
+func (f *_Finder) channel() <-chan string {
+	return f.walker
 }
 
-func (f *Finder) Reset() {
-	f.reset <- true
+func (f *_Finder) reset() {
+	f.done <- true
 }
 
-func (f *Finder) shouldSkip(basematcher string) bool {
+func (f *_Finder) shouldSkip(basematcher string) bool {
 	if basematcher == "." || basematcher == ".." {
 		return false
 	}
@@ -88,7 +88,7 @@ func (f *Finder) shouldSkip(basematcher string) bool {
 	return false
 }
 
-func (f *Finder) matches(rel string) bool {
+func (f *_Finder) matches(rel string) bool {
 	for _, matcher := range f.matchers {
 		if !matcher.Matches(rel) {
 			return false
