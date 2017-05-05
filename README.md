@@ -51,3 +51,10 @@ Sure, I love animation.
 `qxargs vi -o -- find`
 
 ![flow2](https://cloud.githubusercontent.com/assets/245383/25738840/70f066ec-31a9-11e7-879f-24105ffec473.gif)
+
+Interactive Mode
+----------------
+
+I have interactive mode too. Actually, there is no way to disable it right now.
+
+![interactive](https://cloud.githubusercontent.com/assets/245383/25738931/d77e3470-31a9-11e7-9cc4-b873beb68e55.png)
