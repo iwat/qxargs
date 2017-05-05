@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/iwat/qxargs.svg?branch=master)](https://travis-ci.org/iwat/qxargs)
+
 qxargs
 ======
 
