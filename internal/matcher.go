@@ -16,9 +16,8 @@ type _StringMatcher struct {
 func newMatcher(pattern string) (_Matcher, error) {
 	if len(pattern) > 2 && strings.HasPrefix(pattern, "/") && strings.HasSuffix(pattern, "/") {
 		return newRegexpMatcher(pattern)
-	} else {
-		return newStringMatcher(pattern), nil
 	}
+	return newStringMatcher(pattern), nil
 }
 
 func newStringMatcher(pattern string) _StringMatcher {
@@ -26,9 +25,9 @@ func newStringMatcher(pattern string) _StringMatcher {
 }
 
 func (m _StringMatcher) Matches(input string) bool {
-	lower_input := strings.ToLower(input)
+	lower := strings.ToLower(input)
 
-	return strings.Contains(lower_input, m.pattern)
+	return strings.Contains(lower, m.pattern)
 }
 
 type _RegexpMatcher struct {

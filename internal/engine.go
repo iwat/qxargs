@@ -4,14 +4,17 @@ import (
 	"strings"
 )
 
+// Engine is internal component for searching files and grep their contents
 type Engine struct {
 	grepper *_Grepper
 }
 
+// NewEngine creates a new Engine.
 func NewEngine() *Engine {
 	return &Engine{newGrepper()}
 }
 
+// Query will search files, grep contents, and return matching results.
 func (e *Engine) Query(args ...string) []string {
 	var findArgs []string
 	var grepArgs []string

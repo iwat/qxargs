@@ -35,9 +35,8 @@ func newFinder(queries ...string) *_Finder {
 			if finder.shouldSkip(info.Name()) {
 				if info.IsDir() {
 					return filepath.SkipDir
-				} else {
-					return nil
 				}
+				return nil
 			}
 
 			if info.IsDir() {

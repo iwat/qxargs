@@ -21,11 +21,15 @@ func (g *_Grepper) grep(file string, keywords ...string) (bool, error) {
 		return false, err
 	}
 
-	defer func() { _ = f.Close() }()
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		for keyword, _ := range keywordMap {
+		for keyword := range keywordMap {
 			if bytes.Contains(scanner.Bytes(), []byte(keyword)) {
 				delete(keywordMap, keyword)
 			}
