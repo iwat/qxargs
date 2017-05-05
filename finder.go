@@ -5,24 +5,31 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/iwat/qxargs/internal"
 )
 
 type _Finder struct {
-	names   []string
-	channel chan string
-	reset   chan bool
+	matchers []internal.Matcher
+	channel  chan string
+	reset    chan bool
 }
 
-func NewFinder(names ...string) *_Finder {
-	lower_names := make([]string, 0, len(names))
-	for _, name := range names {
-		lower_names = append(lower_names, strings.ToLower(name))
+func NewFinder(queries ...string) *_Finder {
+	matchers := make([]internal.Matcher, 0, len(queries))
+	for _, query := range queries {
+		matcher, err := internal.NewMatcher(query)
+		if err != nil {
+			println(err)
+			continue
+		}
+		matchers = append(matchers, matcher)
 	}
 
 	finder := &_Finder{
-		names:   lower_names,
-		channel: make(chan string),
-		reset:   make(chan bool),
+		matchers: matchers,
+		channel:  make(chan string),
+		reset:    make(chan bool),
 	}
 
 	go func() {
@@ -71,12 +78,12 @@ func (f *_Finder) Reset() {
 	f.reset <- true
 }
 
-func (f *_Finder) shouldSkip(basename string) bool {
-	if basename == "." || basename == ".." {
+func (f *_Finder) shouldSkip(basematcher string) bool {
+	if basematcher == "." || basematcher == ".." {
 		return false
 	}
 
-	if strings.HasPrefix(basename, ".") {
+	if strings.HasPrefix(basematcher, ".") {
 		return true
 	}
 
@@ -84,9 +91,8 @@ func (f *_Finder) shouldSkip(basename string) bool {
 }
 
 func (f *_Finder) matches(rel string) bool {
-	lower_rel := strings.ToLower(rel)
-	for _, name := range f.names {
-		if !strings.Contains(lower_rel, name) {
+	for _, matcher := range f.matchers {
+		if !matcher.Matches(rel) {
 			return false
 		}
 	}

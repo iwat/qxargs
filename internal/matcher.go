@@ -1,0 +1,48 @@
+package internal
+
+import (
+	"regexp"
+	"strings"
+)
+
+type Matcher interface {
+	Matches(input string) bool
+}
+
+type _StringMatcher struct {
+	pattern string
+}
+
+func NewMatcher(pattern string) (Matcher, error) {
+	if len(pattern) > 2 && strings.HasPrefix(pattern, "/") && strings.HasSuffix(pattern, "/") {
+		return newRegexpMatcher(pattern)
+	} else {
+		return newStringMatcher(pattern), nil
+	}
+}
+
+func newStringMatcher(pattern string) _StringMatcher {
+	return _StringMatcher{strings.ToLower(pattern)}
+}
+
+func (m _StringMatcher) Matches(input string) bool {
+	lower_input := strings.ToLower(input)
+
+	return strings.Contains(lower_input, m.pattern)
+}
+
+type _RegexpMatcher struct {
+	pattern *regexp.Regexp
+}
+
+func newRegexpMatcher(pattern string) (*_RegexpMatcher, error) {
+	p, err := regexp.Compile(pattern)
+	if err != nil {
+		return nil, err
+	}
+	return &_RegexpMatcher{p}, nil
+}
+
+func (m _RegexpMatcher) Matches(input string) bool {
+	return m.pattern.FindStringSubmatch(input) != nil
+}
