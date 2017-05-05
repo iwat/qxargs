@@ -12,5 +12,5 @@ install:
   - gometalinter.v1 --install
 
 script:
-  - gometalinter.v1 -e "Subprocess launching with variable.,HIGH,HIGH"
+  - gometalinter.v1 -e "Subprocess launching with variable.,HIGH,HIGH" ./...
   - go test -v ./...
