@@ -58,3 +58,23 @@ Interactive Mode
 I have interactive mode too. Actually, there is no way to disable it right now.
 
 ![interactive](https://cloud.githubusercontent.com/assets/245383/25738931/d77e3470-31a9-11e7-9cc4-b873beb68e55.png)
+
+License
+-------
+
+It's [MIT](https://github.com/iwat/qxargs/blob/master/LICENSE) license.
+
+In short:
+
+- Permissions
+  - Commercial use
+  - Modification
+  - Distribution
+  - Private use
+
+- Conditions
+  - License and copyright notice
+
+- Limitations
+  - Liability
+  - Warranty
