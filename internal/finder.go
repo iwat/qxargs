@@ -1,24 +1,22 @@
-package main
+package internal
 
 import (
 	"errors"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/iwat/qxargs/internal"
 )
 
-type _Finder struct {
-	matchers []internal.Matcher
+type Finder struct {
+	matchers []_Matcher
 	channel  chan string
 	reset    chan bool
 }
 
-func NewFinder(queries ...string) *_Finder {
-	matchers := make([]internal.Matcher, 0, len(queries))
+func NewFinder(queries ...string) *Finder {
+	matchers := make([]_Matcher, 0, len(queries))
 	for _, query := range queries {
-		matcher, err := internal.NewMatcher(query)
+		matcher, err := newMatcher(query)
 		if err != nil {
 			println(err)
 			continue
@@ -26,7 +24,7 @@ func NewFinder(queries ...string) *_Finder {
 		matchers = append(matchers, matcher)
 	}
 
-	finder := &_Finder{
+	finder := &Finder{
 		matchers: matchers,
 		channel:  make(chan string),
 		reset:    make(chan bool),
@@ -70,15 +68,15 @@ func NewFinder(queries ...string) *_Finder {
 	return finder
 }
 
-func (f *_Finder) Channel() <-chan string {
+func (f *Finder) Channel() <-chan string {
 	return f.channel
 }
 
-func (f *_Finder) Reset() {
+func (f *Finder) Reset() {
 	f.reset <- true
 }
 
-func (f *_Finder) shouldSkip(basematcher string) bool {
+func (f *Finder) shouldSkip(basematcher string) bool {
 	if basematcher == "." || basematcher == ".." {
 		return false
 	}
@@ -90,7 +88,7 @@ func (f *_Finder) shouldSkip(basematcher string) bool {
 	return false
 }
 
-func (f *_Finder) matches(rel string) bool {
+func (f *Finder) matches(rel string) bool {
 	for _, matcher := range f.matchers {
 		if !matcher.Matches(rel) {
 			return false

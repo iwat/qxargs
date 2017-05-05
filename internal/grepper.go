@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"bufio"
@@ -6,14 +6,14 @@ import (
 	"os"
 )
 
-type _Grepper struct {
+type Grepper struct {
 }
 
-func NewGrepper() *_Grepper {
-	return &_Grepper{}
+func NewGrepper() *Grepper {
+	return &Grepper{}
 }
 
-func (g *_Grepper) Grep(file string, keywords ...string) (bool, error) {
+func (g *Grepper) Grep(file string, keywords ...string) (bool, error) {
 	keywordMap := mapKeywords(keywords)
 
 	f, err := os.Open(file)

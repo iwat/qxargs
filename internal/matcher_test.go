@@ -6,7 +6,7 @@ import (
 
 func TestMatcher(t *testing.T) {
 	input := "/go/src/github.com/iwat/qxargs/main.go"
-	m1, err := NewMatcher("main")
+	m1, err := newMatcher("main")
 	if err != nil {
 		t.Fatal(err)
 	}

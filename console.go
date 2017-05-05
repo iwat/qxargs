@@ -5,18 +5,20 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/iwat/qxargs/internal"
+
 	"github.com/nsf/termbox-go"
 )
 
 type _Console struct {
-	grepper *_Grepper
+	grepper *internal.Grepper
 	query   string
 	results []string
 }
 
-func newConsole(grepper *_Grepper) *_Console {
+func newConsole() *_Console {
 	return &_Console{
-		grepper: grepper,
+		grepper: internal.NewGrepper(),
 	}
 }
 
@@ -34,7 +36,7 @@ func (c *_Console) update(query string) []string {
 	}
 
 	results := []string(nil)
-	finder := NewFinder(findArgs...)
+	finder := internal.NewFinder(findArgs...)
 	for result := range finder.Channel() {
 		matched, _ := c.grepper.Grep(result, grepArgs...)
 		if matched {

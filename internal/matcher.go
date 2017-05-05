@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-type Matcher interface {
+type _Matcher interface {
 	Matches(input string) bool
 }
 
@@ -13,7 +13,7 @@ type _StringMatcher struct {
 	pattern string
 }
 
-func NewMatcher(pattern string) (Matcher, error) {
+func newMatcher(pattern string) (_Matcher, error) {
 	if len(pattern) > 2 && strings.HasPrefix(pattern, "/") && strings.HasSuffix(pattern, "/") {
 		return newRegexpMatcher(pattern)
 	} else {

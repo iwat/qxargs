@@ -75,9 +75,7 @@ func main() {
 	flag.Parse()
 	commandArgs, queryArgs := parseArgs()
 
-	grepper := NewGrepper()
-
-	console := newConsole(grepper)
+	console := newConsole()
 	results := console.update(strings.Join(queryArgs, " "))
 
 	if len(results) == 0 {

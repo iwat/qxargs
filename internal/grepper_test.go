@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 
 func TestGrep(t *testing.T) {
 	grepper := NewGrepper()
-	match, err := grepper.Grep("main.go", "package", "func", "newGrepper")
+	match, err := grepper.Grep("grepper_test.go", "package", "func", "NewGrepper")
 	if err != nil {
 		t.Fatal(err)
 	}
