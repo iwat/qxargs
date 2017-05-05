@@ -31,7 +31,7 @@ func NewFinder(queries ...string) *Finder {
 	}
 
 	go func() {
-		filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
+		_ = filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 			if finder.shouldSkip(info.Name()) {
 				if info.IsDir() {
 					return filepath.SkipDir

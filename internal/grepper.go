@@ -21,7 +21,7 @@ func (g *Grepper) Grep(file string, keywords ...string) (bool, error) {
 		return false, err
 	}
 
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {

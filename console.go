@@ -38,7 +38,10 @@ func (c *_Console) update(query string) []string {
 	results := []string(nil)
 	finder := internal.NewFinder(findArgs...)
 	for result := range finder.Channel() {
-		matched, _ := c.grepper.Grep(result, grepArgs...)
+		matched, err := c.grepper.Grep(result, grepArgs...)
+		if err != nil {
+			continue
+		}
 		if matched {
 			results = append(results, result)
 		}
@@ -68,7 +71,9 @@ func (c *_Console) loop(commandArgs []string) ([]string, error) {
 		}
 
 		y := 0
-		termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+		if err := termbox.Clear(termbox.ColorDefault, termbox.ColorDefault); err != nil {
+			panic(err)
+		}
 
 		setCells(0, y, "Select one or all files to be executed:", termbox.ColorDefault, termbox.ColorDefault)
 		y += 2
@@ -107,7 +112,9 @@ func (c *_Console) loop(commandArgs []string) ([]string, error) {
 		setCells(len(command)+1, y, c.query, termbox.ColorDefault, termbox.ColorDefault)
 		termbox.SetCursor(len(command)+1+len(c.query), y)
 
-		termbox.Flush()
+		if err := termbox.Flush(); err != nil {
+			panic(err)
+		}
 
 		for {
 			event := termbox.PollEvent()
@@ -133,7 +140,9 @@ func (c *_Console) loop(commandArgs []string) ([]string, error) {
 					}
 				}
 			case termbox.KeyEnter:
-				return []string{c.results[current]}, nil
+				if len(c.results) > 0 {
+					return []string{c.results[current]}, nil
+				}
 			case termbox.KeyBackspace, termbox.KeyBackspace2:
 				if len(c.query) > 0 {
 					c.update(c.query[:len(c.query)-1])
@@ -153,8 +162,6 @@ func (c *_Console) loop(commandArgs []string) ([]string, error) {
 			break
 		}
 	}
-
-	return c.results, nil
 }
 
 func setCells(x, y int, s string, fg, bg termbox.Attribute) {

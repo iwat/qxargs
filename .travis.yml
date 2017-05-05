@@ -1,0 +1,16 @@
+language: go
+
+go:
+  - 1.8.x
+  - master
+
+env:
+  - PATH=$GOPATH/bin:$PATH
+
+install:
+  - go get -u gopkg.in/alecthomas/gometalinter.v1
+  - gometalinter.v1 --install
+
+script:
+  - gometalinter.v1 -e "Subprocess launching with variable.,HIGH,HIGH"
+  - go test -v ./...
