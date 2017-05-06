@@ -7,6 +7,17 @@ Call `xargs` quickly.
 
 Well, the name may be over claimed because I did not implement all functionalities of `xargs`.
 
+Installing
+----------
+
+MacOS is simple.
+
+    $ brew install iwat/public/qxargs
+
+Other OS needs to build from source, which is also one liner.
+
+    $ go get github.com/iwat/qxargs
+
 Usage
 -----
 
