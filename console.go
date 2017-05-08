@@ -81,7 +81,7 @@ func (c *_Console) draw() {
 		{"[TAB/↑/↓]", "select"},
 		{"[Enter]", "execute"},
 		{"[Ctrl-A]", "execute all"},
-		{"[Ctrl-C]", "stop"},
+		{"[ESC]", "exit"},
 	}
 
 	x := 0
@@ -119,7 +119,7 @@ func (c *_Console) loop() ([]string, error) {
 			}
 
 			switch event.Key {
-			case termbox.KeyCtrlC:
+			case termbox.KeyCtrlC, termbox.KeyEsc:
 				return nil, nil
 			case termbox.KeyCtrlA:
 				return c.results, nil
