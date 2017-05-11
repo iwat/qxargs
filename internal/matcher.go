@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"errors"
 	"regexp"
 	"strings"
 )
@@ -13,11 +14,28 @@ type _StringMatcher struct {
 	pattern string
 }
 
-func newMatcher(pattern string) (_Matcher, error) {
-	if len(pattern) > 2 && strings.HasPrefix(pattern, "/") && strings.HasSuffix(pattern, "/") {
-		return newRegexpMatcher(pattern)
+func newMatcher(pattern string) (matcher _Matcher, err error) {
+	negate := false
+
+	if strings.HasPrefix(pattern, "-") {
+		if len(pattern) == 1 {
+			return nil, errors.New("incomplete negate matcher")
+		}
+		negate = true
+		pattern = pattern[1:]
 	}
-	return newStringMatcher(pattern), nil
+
+	if len(pattern) > 2 && strings.HasPrefix(pattern, "/") && strings.HasSuffix(pattern, "/") {
+		matcher, err = newRegexpMatcher(pattern)
+	} else {
+		matcher = newStringMatcher(pattern)
+	}
+
+	if negate {
+		matcher = newNegateMatcher(matcher)
+	}
+
+	return matcher, err
 }
 
 func newStringMatcher(pattern string) _StringMatcher {
@@ -45,4 +63,16 @@ func newRegexpMatcher(pattern string) (*_RegexpMatcher, error) {
 
 func (m _RegexpMatcher) Matches(input string) bool {
 	return m.pattern.FindStringSubmatch(input) != nil
+}
+
+type _NegateMatcher struct {
+	original _Matcher
+}
+
+func newNegateMatcher(matcher _Matcher) *_NegateMatcher {
+	return &_NegateMatcher{matcher}
+}
+
+func (m _NegateMatcher) Matches(input string) bool {
+	return !m.original.Matches(input)
 }

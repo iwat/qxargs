@@ -18,7 +18,6 @@ func newFinder(queries ...string) *_Finder {
 	for _, query := range queries {
 		matcher, err := newMatcher(query)
 		if err != nil {
-			println(err)
 			continue
 		}
 		matchers = append(matchers, matcher)
