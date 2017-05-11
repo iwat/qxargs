@@ -35,6 +35,7 @@ type _RegexpMatcher struct {
 }
 
 func newRegexpMatcher(pattern string) (*_RegexpMatcher, error) {
+	pattern = pattern[1 : len(pattern)-1]
 	p, err := regexp.Compile(pattern)
 	if err != nil {
 		return nil, err
