@@ -26,10 +26,11 @@ func newFinder(queries ...string) *_Finder {
 	finder := &_Finder{
 		matchers: matchers,
 		walker:   make(chan string),
-		done:     make(chan bool),
+		done:     make(chan bool, 1),
 	}
 
 	go func() {
+		defer close(finder.walker)
 		_ = filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 			if finder.shouldSkip(info.Name()) {
 				if info.IsDir() {
@@ -59,8 +60,6 @@ func newFinder(queries ...string) *_Finder {
 
 			return nil
 		})
-		close(finder.walker)
-		close(finder.done)
 	}()
 
 	return finder
@@ -72,6 +71,7 @@ func (f *_Finder) channel() <-chan string {
 
 func (f *_Finder) reset() {
 	f.done <- true
+	close(f.done)
 }
 
 func (f *_Finder) shouldSkip(basematcher string) bool {

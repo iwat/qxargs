@@ -13,13 +13,18 @@ func newGrepper() *_Grepper {
 }
 
 func (g *_Grepper) grep(file string, keywords ...string) (bool, error) {
-	matchers := make(map[string]_Matcher, len(keywords))
+	matchers := make(map[string]_Matcher)
+	negateMatchers := make(map[string]_Matcher)
 	for _, keyword := range keywords {
 		matcher, err := newMatcher(keyword)
 		if err != nil {
 			continue
 		}
-		matchers[keyword] = matcher
+		if _, ok := matcher.(*_NegateMatcher); ok {
+			negateMatchers[keyword] = matcher
+		} else {
+			matchers[keyword] = matcher
+		}
 	}
 
 	f, err := os.Open(file)
@@ -40,7 +45,12 @@ func (g *_Grepper) grep(file string, keywords ...string) (bool, error) {
 				delete(matchers, keyword)
 			}
 		}
-		if len(matchers) == 0 {
+		for _, negateMatcher := range negateMatchers {
+			if !negateMatcher.Matches(scanner.Text()) {
+				return false, nil
+			}
+		}
+		if len(matchers) == 0 && len(negateMatchers) == 0 {
 			break
 		}
 	}

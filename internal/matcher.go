@@ -8,6 +8,7 @@ import (
 
 type _Matcher interface {
 	Matches(input string) bool
+	String() string
 }
 
 type _StringMatcher struct {
@@ -48,6 +49,10 @@ func (m _StringMatcher) Matches(input string) bool {
 	return strings.Contains(lower, m.pattern)
 }
 
+func (m _StringMatcher) String() string {
+	return m.pattern
+}
+
 type _RegexpMatcher struct {
 	pattern *regexp.Regexp
 }
@@ -65,6 +70,10 @@ func (m _RegexpMatcher) Matches(input string) bool {
 	return m.pattern.FindStringSubmatch(input) != nil
 }
 
+func (m *_RegexpMatcher) String() string {
+	return m.pattern.String()
+}
+
 type _NegateMatcher struct {
 	original _Matcher
 }
@@ -75,4 +84,8 @@ func newNegateMatcher(matcher _Matcher) *_NegateMatcher {
 
 func (m _NegateMatcher) Matches(input string) bool {
 	return !m.original.Matches(input)
+}
+
+func (m _NegateMatcher) String() string {
+	return "-" + m.original.String()
 }
