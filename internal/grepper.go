@@ -2,7 +2,6 @@ package internal
 
 import (
 	"bufio"
-	"bytes"
 	"os"
 )
 
@@ -14,7 +13,14 @@ func newGrepper() *_Grepper {
 }
 
 func (g *_Grepper) grep(file string, keywords ...string) (bool, error) {
-	keywordMap := mapKeywords(keywords)
+	matchers := make(map[string]_Matcher, len(keywords))
+	for _, keyword := range keywords {
+		matcher, err := newMatcher(keyword)
+		if err != nil {
+			continue
+		}
+		matchers[keyword] = matcher
+	}
 
 	f, err := os.Open(file)
 	if err != nil {
@@ -29,12 +35,12 @@ func (g *_Grepper) grep(file string, keywords ...string) (bool, error) {
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		for keyword := range keywordMap {
-			if bytes.Contains(scanner.Bytes(), []byte(keyword)) {
-				delete(keywordMap, keyword)
+		for keyword, matcher := range matchers {
+			if matcher.Matches(scanner.Text()) {
+				delete(matchers, keyword)
 			}
 		}
-		if len(keywordMap) == 0 {
+		if len(matchers) == 0 {
 			break
 		}
 	}
@@ -43,16 +49,5 @@ func (g *_Grepper) grep(file string, keywords ...string) (bool, error) {
 		return false, err
 	}
 
-	return len(keywordMap) == 0, nil
-}
-
-func mapKeywords(keywords []string) map[string]bool {
-	keywordMap := map[string]bool{}
-
-	// Create a map of all unique elements.
-	for _, keyword := range keywords {
-		keywordMap[keyword] = false
-	}
-
-	return keywordMap
+	return len(matchers) == 0, nil
 }
