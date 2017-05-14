@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/iwat/qxargs.svg?branch=master)](https://travis-ci.org/iwat/qxargs)
+[![Go Report Card](https://goreportcard.com/badge/github.com/iwat/qxargs)](https://goreportcard.com/report/github.com/iwat/qxargs)
 
 qxargs
 ======
