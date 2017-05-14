@@ -9,6 +9,8 @@ env:
 
 install:
   - go get -t ./...
+  - go get -u golang.org/x/tools/cmd/cover
+  - go get -u github.com/mattn/goveralls
   - go get -u gopkg.in/alecthomas/gometalinter.v1
   - gometalinter.v1 --install
   - go build -i
@@ -16,4 +18,7 @@ install:
 script:
   - gometalinter.v1 -e "Subprocess launching with variable" -e "cyclomatic complexity"
     ./...
-  - go test -v ./...
+  - go test -v -covermode=count -coverprofile=internal.out ./internal
+
+after_success:
+  - goveralls -coverprofile=internal.out -service=travis-ci
