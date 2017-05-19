@@ -18,10 +18,5 @@ func TestFind(t *testing.T) {
 		t.Fatal("expected finder_test.go, got", match)
 	}
 
-	defer func() {
-		if r := recover(); r != nil {
-			t.Log("recovered", r)
-		}
-	}()
 	finder.reset()
 }

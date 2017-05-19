@@ -30,7 +30,6 @@ func newFinder(queries ...string) *_Finder {
 	}
 
 	go func() {
-		defer close(finder.walker)
 		_ = filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 			if finder.shouldSkip(info.Name()) {
 				if info.IsDir() {
@@ -60,6 +59,7 @@ func newFinder(queries ...string) *_Finder {
 
 			return nil
 		})
+		close(finder.walker)
 	}()
 
 	return finder
